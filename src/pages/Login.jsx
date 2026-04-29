@@ -24,10 +24,12 @@ export default function Login() {
     setMessage('')
     setError('')
 
+    const redirectTo = import.meta.env.VITE_SITE_URL || window.location.origin
+
     const { error: signInError } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo: redirectTo,
       },
     })
 

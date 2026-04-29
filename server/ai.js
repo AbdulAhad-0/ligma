@@ -11,7 +11,7 @@ exports.classify = async (req, res) => {
 
   try {
     console.log('[AI] Classifying:', content.slice(0, 50) + '...')
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' }) // gemini-2.5-flash does not exist
 
     const prompt = `You are classifying sticky notes from a brainstorming canvas.
 Classify this note and respond ONLY with valid JSON — no markdown, no backticks, no explanation.
@@ -96,7 +96,7 @@ exports.summary = async (req, res) => {
   }
 
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' }) // gemini-2.5-flash does not exist
 
     const prompt = `Summarize this brainstorming session into a structured brief.
 Canvas notes: ${JSON.stringify(nodes)}
