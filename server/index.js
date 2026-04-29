@@ -178,7 +178,13 @@ app.post('/api/sync-node', async (req, res) => {
       
     if (!member) return res.status(403).json({ error: 'Not a member of this workspace' })
 
-    // 2. Perform upsert using Service Role
+    // 2. Check RBAC permissions
+    const canEdit = await rbac.canEditNode(userId, nodeId, workspaceId)
+    if (!canEdit) {
+      return res.status(403).json({ error: 'You do not have permission to edit this node' })
+    }
+
+    // 3. Perform upsert using Service Role
     const { error } = await supabase.from('canvas_nodes').upsert({
       id: nodeId,
       workspace_id: workspaceId,
@@ -235,4 +241,45 @@ app.post('/api/workspaces', async (req, res) => {
 
 app.post('/api/invite-member', async (req, res) => {
   try {
-    const { workspaceId
+    const { workspaceId, requesterId, invitedEmail, role } = req.body
+
+    // 1. Verify requester is Lead
+    const { data: requester } = await supabase
+      .from('workspace_members')
+      .select('role')
+      .eq('workspace_id', workspaceId)
+      .eq('user_id', requesterId)
+      .single()
+
+    if (requester?.role !== 'lead') {
+      return res.status(403).json({ error: 'Only Leads can invite members' })
+    }
+
+    // 2. Find user by email
+    const { data: userData, error: findError } = await supabase.auth.admin.listUsers()
+    if (findError) throw findError
+    
+    const invitedUser = userData.users.find(u => u.email?.toLowerCase() === invitedEmail?.toLowerCase())
+    if (!invitedUser) {
+      return res.status(404).json({ error: 'User not found. They must sign up for LIGMA first.' })
+    }
+
+    // 3. Add to workspace
+    const { error: inviteError } = await supabase.from('workspace_members').upsert({
+      workspace_id: workspaceId,
+      user_id: invitedUser.id,
+      role: role || 'viewer'
+    })
+
+    if (inviteError) throw inviteError
+
+    res.json({ success: true, message: `Invited ${invitedEmail} as ${role}` })
+  } catch (err) {
+    console.error('[API] Invite Error:', err)
+    res.status(500).json({ error: err.message })
+  }
+})
+
+server.listen(PORT, () => {
+  console.log(`Server listening on port ${PORT}`)
+})

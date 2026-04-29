@@ -130,4 +130,83 @@ export default function Workspace() {
                 onClick={() => setShowInvite(!showInvite)}
                 className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" heigh
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/><line x1="22" x2="16" y1="11" y2="11"/></svg>
+                Invite
+              </button>
+
+              {showInvite && (
+                <div className="absolute right-0 top-full mt-2 w-72 rounded-2xl border border-slate-200 bg-white p-4 shadow-2xl z-[10000]">
+                  <h3 className="mb-3 text-sm font-bold text-slate-900">Invite to Workspace</h3>
+                  <form onSubmit={handleInvite} className="space-y-3">
+                    <input
+                      type="email"
+                      placeholder="user@email.com"
+                      value={inviteEmail}
+                      onChange={(e) => setInviteEmail(e.target.value)}
+                      className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-slate-900"
+                      required
+                    />
+                    <select
+                      value={inviteRole}
+                      onChange={(e) => setInviteRole(e.target.value)}
+                      className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none"
+                    >
+                      <option value="viewer">Viewer</option>
+                      <option value="contributor">Contributor</option>
+                      <option value="lead">Lead</option>
+                    </select>
+                    <button
+                      type="submit"
+                      className="w-full rounded-xl bg-slate-900 py-2 text-sm font-bold text-white hover:bg-slate-800"
+                    >
+                      Send Invite
+                    </button>
+                    {inviteStatus && (
+                      <p className="text-[10px] font-bold text-center text-slate-500 uppercase tracking-wider italic">{inviteStatus}</p>
+                    )}
+                  </form>
+                </div>
+              )}
+            </div>
+          )}
+
+          <button 
+            onClick={async () => {
+              try {
+                const res = await fetch(`${import.meta.env.VITE_WS_URL}/api/summary`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ workspaceId })
+                })
+                const data = await res.json()
+                if (data.summary) {
+                  alert("Gemini Summary Brief:\n\n" + data.summary)
+                }
+              } catch (e) {
+                console.error("Summary failed:", e)
+              }
+            }}
+            className="rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+          >
+            Export Summary
+          </button>
+        </div>
+      </div>
+
+      <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
+        <aside className="h-full w-[280px] shrink-0 border-r border-slate-200 bg-white">
+          <EventLogSidebar workspaceId={workspaceId} />
+        </aside>
+
+        <main className="relative min-w-0 flex-1 overflow-hidden bg-white">
+          <Canvas ref={canvasRef} workspaceId={workspaceId} userId={user?.id} />
+          <CursorOverlay workspaceId={workspaceId} />
+        </main>
+
+        <aside className="h-full w-[320px] shrink-0 border-l border-slate-200 bg-white">
+          <TaskBoard workspaceId={workspaceId} canvasRef={canvasRef} />
+        </aside>
+      </div>
+    </div>
+  )
+}

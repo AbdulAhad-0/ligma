@@ -10,6 +10,7 @@ exports.classify = async (req, res) => {
   if (!content || content.trim().length < 5) return res.json({ intent: null })
 
   try {
+    console.log('[AI] Classifying:', content.slice(0, 50) + '...')
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
 
     const prompt = `You are classifying sticky notes from a brainstorming canvas.
@@ -22,6 +23,7 @@ confidence is 0.0 to 1.0`
 
     const result = await model.generateContent(prompt)
     const text = result.response.text().trim()
+    console.log('[AI] Response:', text)
     
     // Strip any accidental markdown backticks
     const clean = text.replace(/```json|```/g, '').trim()
@@ -94,7 +96,7 @@ exports.summary = async (req, res) => {
   }
 
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
 
     const prompt = `Summarize this brainstorming session into a structured brief.
 Canvas notes: ${JSON.stringify(nodes)}

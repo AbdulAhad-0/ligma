@@ -22,7 +22,7 @@ module.exports = {
         .eq('id', nodeId)
         .single()
 
-      if (!node) return false
+      if (!node) return true // If node doesn't exist yet, allow creation by any member
       
       const minRole = node.props?.min_role || 'viewer' // default: anyone can edit
 
