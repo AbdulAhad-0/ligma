@@ -122,11 +122,17 @@ const Canvas = forwardRef(function Canvas({ workspaceId, userId }, ref) {
             const props = typeof n.props === 'string' ? JSON.parse(n.props) : (n.props || {})
             const minRole = props.min_role || 'viewer'
             const cleanProps = { ...props }; delete cleanProps.min_role
-            const typeToUse = (n.type === 'shape' || n.type === 'sticky_note') ? 'geo' : n.type
+            
+            // Map types correctly: tldraw uses 'note' for sticky notes
+            let typeToUse = n.type
+            if (n.type === 'sticky_note') typeToUse = 'note'
+            if (n.type === 'shape') typeToUse = 'geo'
             
             const supportsText = ['geo', 'note', 'text'].includes(typeToUse)
             const finalProps = { ...cleanProps }
-            if (supportsText) finalProps.text = n.content || cleanProps.text || ''
+            if (supportsText) {
+              finalProps.text = n.content || cleanProps.text || ''
+            }
 
             return {
               id: `shape:${n.id}`, type: typeToUse, x: n.x, y: n.y,

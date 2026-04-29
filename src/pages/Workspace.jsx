@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef } from 'react'
+import React, { useEffect, useMemo, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import socket from '../lib/socket'
@@ -10,7 +10,7 @@ import Canvas from '../components/Canvas'
 import CursorOverlay from '../components/CursorOverlay'
 import EventLogSidebar from '../components/EventLogSidebar'
 import TaskBoard from '../components/TaskBoard'
-import { UserPlus, Sparkles, ChevronLeft, LayoutGrid, Users, ShieldCheck, ArrowRight } from 'lucide-react'
+import { UserPlus, Sparkles, ChevronLeft, LayoutGrid, Users, ShieldCheck, ArrowRight, Zap, Search } from 'lucide-react'
 
 export default function Workspace() {
   const { id: workspaceId } = useParams()
@@ -23,12 +23,10 @@ export default function Workspace() {
   const workspace = useWorkspaceStore((state) => state.workspace)
   const members = useWorkspaceStore((state) => state.members)
   const myRole = useWorkspaceStore((state) => state.myRole)
-  const cursors = usePresenceStore((state) => state.cursors)
+  const activeUserIds = useWorkspaceStore((state) => state.activeUserIds || [])
   const canvasRef = useRef(null)
 
   useRealtimeSubscriptions(workspaceId)
-
-  const [activeUserIds, setActiveUserIds] = React.useState([])
 
   useEffect(() => {
     const loadWorkspace = async () => {
@@ -61,8 +59,8 @@ export default function Workspace() {
 
     const onMembersChanged = () => loadWorkspace()
     const onRoomUsers = ({ users }) => {
-      console.log('[Socket] Room users update:', users)
-      setActiveUserIds(users)
+      // We'll update the store's activeUserIds
+      useWorkspaceStore.setState({ activeUserIds: users })
     }
 
     if (socket.connected) {
@@ -80,7 +78,7 @@ export default function Workspace() {
   }, [setMembers, setMyRole, setWorkspace, user?.id, workspaceId])
 
   const roleBadgeStyle = useMemo(() => {
-    if (myRole === 'lead') return 'bg-indigo-50 text-indigo-600 border-indigo-200'
+    if (myRole === 'lead') return 'bg-indigo-50 text-indigo-600 border-indigo-200 shadow-sm shadow-indigo-100'
     if (myRole === 'contributor') return 'bg-emerald-50 text-emerald-600 border-emerald-200'
     return 'bg-slate-50 text-slate-500 border-slate-200'
   }, [myRole])
@@ -137,22 +135,22 @@ export default function Workspace() {
           return (
             <div 
               key={m.user_id} 
-              className={`relative h-9 w-9 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center text-[11px] font-black shadow-sm transition-transform hover:-translate-y-1 hover:z-10 cursor-help ${isOnline ? 'ring-2 ring-emerald-500 ring-offset-2' : ''}`}
+              className={`relative h-10 w-10 rounded-full border-2 border-white bg-slate-50 flex items-center justify-center text-[11px] font-black shadow-md transition-all hover:-translate-y-1 hover:z-10 cursor-help ${isOnline ? 'ring-2 ring-emerald-500 ring-offset-2' : 'grayscale-[0.5]'}`}
               title={m.profiles?.username || 'User'}
             >
               {m.profiles?.avatar_url ? (
                 <img src={m.profiles.avatar_url} alt="" className="h-full w-full rounded-full object-cover" />
               ) : (
-                <span className="text-slate-600">{initials}</span>
+                <span className="text-slate-500">{initials}</span>
               )}
               {isOnline && (
-                <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-500 border-2 border-white" />
+                <span className="absolute bottom-0.5 right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 border-2 border-white" />
               )}
             </div>
           )
         })}
         {extra > 0 && (
-          <div className="h-9 w-9 rounded-full border-2 border-white bg-slate-900 flex items-center justify-center text-[10px] font-black text-white shadow-sm">
+          <div className="h-10 w-10 rounded-full border-2 border-white bg-slate-950 flex items-center justify-center text-[10px] font-black text-white shadow-md">
             +{extra}
           </div>
         )}
@@ -161,80 +159,98 @@ export default function Workspace() {
   }, [members, activeUserIds])
 
   return (
-    <div className="h-screen overflow-hidden bg-white text-slate-900 selection:bg-indigo-100 font-sans">
-      {/* Bright Premium Header */}
-      <div className="flex h-16 items-center justify-between border-b border-slate-200 bg-white px-6 shadow-sm relative z-[1000]">
-        <div className="flex items-center gap-6">
+    <div className="h-screen overflow-hidden bg-[#F8FAFC] text-slate-900 selection:bg-indigo-100 font-sans">
+      {/* Studio Header */}
+      <div className="flex h-20 items-center justify-between border-b border-slate-200 bg-white px-8 shadow-sm relative z-[1000]">
+        <div className="flex items-center gap-8">
           <button 
             onClick={() => navigate('/')}
-            className="group flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white transition-all hover:bg-slate-50 hover:border-slate-300"
+            className="group flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-200 bg-white transition-all hover:bg-slate-50 hover:border-slate-300 hover:shadow-lg"
           >
-            <ChevronLeft size={20} className="text-slate-500 group-hover:text-indigo-600 transition-colors" />
+            <ChevronLeft size={22} className="text-slate-400 group-hover:text-indigo-600 transition-colors" />
           </button>
           
-          <div className="h-8 w-[1px] bg-slate-200" />
+          <div className="h-10 w-[1px] bg-slate-200" />
 
-          <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-lg font-black tracking-tighter text-slate-950 uppercase">{workspace?.name || 'WORKSPACE'}</h1>
-              <span className={`rounded-full border px-3 py-0.5 text-[10px] font-black uppercase tracking-widest ${roleBadgeStyle}`}>
+          <div className="flex flex-col">
+            <div className="flex items-center gap-4">
+              <h1 className="text-2xl font-black tracking-tighter text-slate-950 uppercase leading-none">{workspace?.name || 'WORKSPACE'}</h1>
+              <span className={`rounded-full border px-4 py-1 text-[10px] font-black uppercase tracking-widest ${roleBadgeStyle}`}>
                 {myRole || 'viewer'}
               </span>
+            </div>
+            <div className="flex items-center gap-2 mt-1.5">
+              <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{activeUserIds.length} ACTIVE NOW</p>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-6">
-          {/* Figma Avatar Stack */}
-          <div className="flex items-center gap-3">
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 mr-2">Active</span>
+        {/* Center - Gemini Branding */}
+        <div className="hidden lg:flex items-center gap-3 px-6 py-2.5 rounded-full border border-slate-100 bg-slate-50/50">
+          <Zap size={16} className="text-indigo-600 fill-indigo-600" />
+          <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">LIGMA Neural Sync Active</span>
+        </div>
+
+        <div className="flex items-center gap-8">
+          {/* Avatar Stack */}
+          <div className="flex items-center gap-4">
             {avatarStack}
           </div>
 
-          <div className="h-8 w-[1px] bg-slate-200" />
+          <div className="h-10 w-[1px] bg-slate-200" />
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             {myRole === 'lead' && (
               <div className="relative">
                 <button 
                   onClick={() => setShowInvite(!showInvite)}
-                  className="group flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-black uppercase tracking-widest text-slate-600 transition-all hover:bg-slate-50 hover:border-slate-300 active:scale-95"
+                  className="group flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-xs font-black uppercase tracking-widest text-slate-600 transition-all hover:bg-slate-50 hover:border-slate-300 hover:shadow-md active:scale-95"
                 >
-                  <UserPlus size={16} />
+                  <UserPlus size={18} />
                   INVITE
                 </button>
 
                 {showInvite && (
-                  <div className="absolute right-0 top-full mt-3 w-80 overflow-hidden rounded-[2.5rem] border border-slate-200 bg-white shadow-2xl animate-in zoom-in-95 duration-200">
+                  <div className="absolute right-0 top-full mt-4 w-80 overflow-hidden rounded-[2.5rem] border border-slate-200 bg-white shadow-2xl animate-in zoom-in-95 duration-200">
                     <div className="p-8">
-                      <h3 className="mb-4 text-xs font-black uppercase tracking-[0.3em] text-indigo-600">Collaborator Invite</h3>
+                      <div className="flex items-center gap-3 mb-6">
+                        <Users size={20} className="text-indigo-600" />
+                        <h3 className="text-xs font-black uppercase tracking-[0.3em] text-slate-900">Add Collaborator</h3>
+                      </div>
                       <form onSubmit={handleInvite} className="space-y-4">
-                        <input
-                          type="email"
-                          placeholder="user@email.com"
-                          value={inviteEmail}
-                          onChange={(e) => setInviteEmail(e.target.value)}
-                          className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50 px-5 py-3.5 text-sm font-bold text-slate-900 outline-none transition-all placeholder:text-slate-300 focus:border-indigo-600/30 focus:bg-white"
-                          required
-                          autoFocus
-                        />
-                        <select
-                          value={inviteRole}
-                          onChange={(e) => setInviteRole(e.target.value)}
-                          className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50 px-5 py-3.5 text-sm font-bold text-slate-900 outline-none focus:border-indigo-600/30 focus:bg-white appearance-none"
-                        >
-                          <option value="viewer">VIEWER ACCESS</option>
-                          <option value="contributor">CONTRIBUTOR RANK</option>
-                          <option value="lead">LEAD PRIVILEGE</option>
-                        </select>
+                        <div className="space-y-2">
+                          <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">E-mail Terminal</span>
+                          <input
+                            type="email"
+                            placeholder="teammate@neural.link"
+                            value={inviteEmail}
+                            onChange={(e) => setInviteEmail(e.target.value)}
+                            className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-900 outline-none transition-all placeholder:text-slate-300 focus:border-indigo-600/30 focus:bg-white"
+                            required
+                            autoFocus
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Access Rank</span>
+                          <select
+                            value={inviteRole}
+                            onChange={(e) => setInviteRole(e.target.value)}
+                            className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-900 outline-none focus:border-indigo-600/30 focus:bg-white appearance-none"
+                          >
+                            <option value="viewer">VIEWER</option>
+                            <option value="contributor">CONTRIBUTOR</option>
+                            <option value="lead">LEAD</option>
+                          </select>
+                        </div>
                         <button
                           type="submit"
-                          className="w-full rounded-2xl bg-indigo-600 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-white transition-all hover:bg-indigo-700 shadow-xl shadow-indigo-100"
+                          className="w-full rounded-2xl bg-slate-950 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-white transition-all hover:bg-indigo-600 shadow-xl"
                         >
-                          SEND INVITE
+                          DISPATCH INVITE
                         </button>
                         {inviteStatus && (
-                          <p className="text-[9px] font-black text-center text-slate-400 uppercase tracking-widest animate-pulse">{inviteStatus}</p>
+                          <p className="text-[9px] font-black text-center text-indigo-600 uppercase tracking-widest animate-pulse">{inviteStatus}</p>
                         )}
                       </form>
                     </div>
@@ -253,36 +269,37 @@ export default function Workspace() {
                   })
                   const data = await res.json()
                   if (data.summary) {
-                    alert("GEMINI SUMMARY:\n\n" + data.summary)
+                    alert("Ligma ANALYTIC SUMMARY:\n\n" + data.summary)
                   }
                 } catch (e) {
                   console.error("Summary failed:", e)
                 }
               }}
-              className="flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-black uppercase tracking-widest text-white shadow-xl shadow-indigo-200 transition-all hover:bg-indigo-700 active:scale-95"
+              className="flex items-center gap-3 rounded-2xl bg-indigo-600 px-6 py-3.5 text-xs font-black uppercase tracking-widest text-white shadow-2xl shadow-indigo-200 transition-all hover:bg-indigo-700 hover:scale-[1.02] active:scale-[0.98]"
             >
-              <Sparkles size={16} className="fill-white" />
+              <Sparkles size={18} className="fill-white" />
               SUMMARY
             </button>
           </div>
         </div>
       </div>
 
-      {/* Main Layout */}
-      <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
+      {/* Workspace Grid Layout */}
+      <div className="flex h-[calc(100vh-5rem)] overflow-hidden">
         {/* Left Sidebar - Event Log */}
-        <aside className="h-full w-[300px] shrink-0 border-r border-slate-200 bg-slate-50/30">
+        <aside className="h-full w-[320px] shrink-0 border-r border-slate-200 bg-slate-50/50 backdrop-blur-xl">
           <EventLogSidebar workspaceId={workspaceId} />
         </aside>
 
-        {/* Center - Canvas */}
-        <main className="relative min-w-0 flex-1 overflow-hidden bg-white">
+        {/* Center - Collaborative Canvas */}
+        <main className="relative min-w-0 flex-1 overflow-hidden bg-white shadow-inner">
+          <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_80px_rgba(0,0,0,0.02)] z-10" />
           <Canvas ref={canvasRef} workspaceId={workspaceId} userId={user?.id} />
           <CursorOverlay workspaceId={workspaceId} />
         </main>
 
-        {/* Right Sidebar - Task Board */}
-        <aside className="h-full w-[340px] shrink-0 border-l border-slate-200 bg-slate-50/30">
+        {/* Right Sidebar - Neural Task Board */}
+        <aside className="h-full w-[360px] shrink-0 border-l border-slate-200 bg-slate-50/50 backdrop-blur-xl">
           <TaskBoard workspaceId={workspaceId} canvasRef={canvasRef} />
         </aside>
       </div>

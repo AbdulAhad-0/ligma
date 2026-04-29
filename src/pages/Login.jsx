@@ -117,7 +117,7 @@ export default function Login() {
         {/* Footer Info */}
         <div className="mt-12 flex items-center justify-center gap-6">
           <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
-            Powered by Gemini AI
+            Created By Abdul Ahad
           </p>
           <div className="h-1 w-1 rounded-full bg-slate-300" />
           <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">

@@ -96,7 +96,7 @@ exports.summary = async (req, res) => {
   }
 
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
 
     const prompt = `Summarize this brainstorming session into a structured brief.
 Canvas notes: ${JSON.stringify(nodes)}
