@@ -123,12 +123,28 @@ export default function useRealtimeSubscriptions(workspaceId) {
         }
       })
 
+    // Channel 4 — members changes
+    const membersCh = supabase
+      .channel('members-' + workspaceId)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'workspace_members', filter: 'workspace_id=eq.' + workspaceId },
+        () => {
+          // Trigger a refresh event or just rely on manual refetch
+          // For now, let's just log and we'll handle the refetch in Workspace.jsx
+          console.log('[Realtime] Members changed')
+          window.dispatchEvent(new CustomEvent('workspace-members-changed'))
+        }
+      )
+      .subscribe()
+
     // Cleanup on unmount
     return () => {
       try {
         eventsCh.unsubscribe?.()
         tasksCh.unsubscribe?.()
         presenceCh.unsubscribe?.()
+        membersCh.unsubscribe?.()
       } catch (e) {
         // ignore
       }
@@ -136,6 +152,7 @@ export default function useRealtimeSubscriptions(workspaceId) {
         supabase.removeChannel?.(eventsCh)
         supabase.removeChannel?.(tasksCh)
         supabase.removeChannel?.(presenceCh)
+        supabase.removeChannel?.(membersCh)
       } catch (e) {
         // ignore
       }

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../stores/useAuthStore'
+import { Plus, LayoutGrid, LogOut, ExternalLink, Calendar, Users, ArrowRight } from 'lucide-react'
 
 export default function Home() {
   const navigate = useNavigate()
@@ -16,7 +17,7 @@ export default function Home() {
   const [workspaceName, setWorkspaceName] = useState('')
 
   const displayName = useMemo(() => {
-    return profile?.username || user?.email || 'User'
+    return profile?.username || user?.email?.split('@')[0] || 'User'
   }, [profile, user])
 
   useEffect(() => {
@@ -89,119 +90,167 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#eff6ff_0%,_#ffffff_45%,_#f8fafc_100%)] text-slate-900">
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        <header className="mb-8 flex items-center justify-between gap-4 rounded-[2rem] border border-slate-200/80 bg-white/80 px-5 py-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-cyan-700">LIGMA</p>
-            <h1 className="mt-1 text-2xl font-semibold text-slate-900">Your workspaces</h1>
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 selection:bg-indigo-100 font-sans">
+      {/* Dynamic Background Gradients */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-indigo-500/10 rounded-full blur-[100px]" />
+        <div className="absolute top-[20%] -right-[10%] w-[30%] h-[30%] bg-cyan-500/10 rounded-full blur-[80px]" />
+      </div>
+
+      <div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {/* Modern Header */}
+        <header className="mb-12 flex items-center justify-between gap-4 rounded-[2rem] border border-slate-200 bg-white px-6 py-4 shadow-xl shadow-slate-200/50 backdrop-blur-md">
+          <div className="flex items-center gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-600 shadow-lg shadow-indigo-200">
+              <LayoutGrid size={24} className="text-white" />
+            </div>
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-600/80">COLLABORATIVE</p>
+              <h1 className="text-xl font-black tracking-tighter text-slate-950">LIGMA.AI</h1>
+            </div>
           </div>
 
-          <div className="flex items-center gap-3 text-sm">
-            <div className="hidden text-right sm:block">
-              <div className="font-medium text-slate-900">{displayName}</div>
-              <div className="text-slate-500">{user?.email}</div>
+          <div className="flex items-center gap-4">
+            <div className="hidden text-right md:block">
+              <div className="text-sm font-black text-slate-950">{displayName}</div>
+              <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{user?.email}</div>
             </div>
             <button
               onClick={handleSignOut}
-              className="rounded-2xl border border-slate-200 bg-white px-4 py-2 font-medium text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
+              className="group flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white transition-all hover:bg-slate-50 hover:border-slate-300 active:scale-95"
             >
-              Sign out
+              <LogOut size={20} className="text-slate-500 group-hover:text-indigo-600 transition-colors" />
             </button>
           </div>
         </header>
 
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h2 className="text-lg font-semibold text-slate-900">Workspace dashboard</h2>
-            <p className="text-sm text-slate-500">Open an existing workspace or create a new one.</p>
+        {/* Hero & CTA */}
+        <div className="mb-12 flex flex-wrap items-center justify-between gap-8 px-4">
+          <div className="max-w-xl">
+            <h2 className="text-5xl font-black tracking-tight text-slate-950 sm:text-6xl leading-[1.1]">
+              Think <span className="text-indigo-600">Together.</span><br />
+              Build <span className="text-cyan-500">Faster.</span>
+            </h2>
+            <p className="mt-6 text-lg text-slate-500 font-medium leading-relaxed">
+              Experience the next generation of brainstorming. Powered by Gemini, built for teams.
+            </p>
           </div>
 
           <button
-            onClick={() => setShowCreateForm((value) => !value)}
-            className="rounded-2xl bg-slate-900 px-4 py-2 font-semibold text-white shadow-lg shadow-slate-900/10 transition hover:bg-slate-800"
+            onClick={() => setShowCreateForm((v) => !v)}
+            className="group relative flex items-center gap-3 rounded-[2rem] bg-indigo-600 px-8 py-5 text-sm font-black text-white transition-all hover:bg-indigo-700 hover:scale-[1.05] active:scale-[0.98] shadow-2xl shadow-indigo-200"
           >
-            Create Workspace
+            <Plus size={20} strokeWidth={3} />
+            CREATE NEW WORKSPACE
           </button>
         </div>
 
-        {showCreateForm ? (
-          <form
-            onSubmit={handleCreateWorkspace}
-            className="mb-8 rounded-[2rem] border border-slate-200 bg-white p-5 shadow-[0_24px_80px_rgba(15,23,42,0.08)]"
-          >
-            <label className="block">
-              <span className="mb-2 block text-sm font-medium text-slate-700">Workspace name</span>
-              <input
-                type="text"
-                value={workspaceName}
-                onChange={(event) => setWorkspaceName(event.target.value)}
-                placeholder="New product launch"
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
-                required
-              />
-            </label>
-
-            <div className="mt-4 flex gap-3">
-              <button
-                type="submit"
-                disabled={creating}
-                className="rounded-2xl bg-cyan-500 px-4 py-2 font-semibold text-white transition hover:bg-cyan-600 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {creating ? 'Creating...' : 'Create'}
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowCreateForm(false)}
-                className="rounded-2xl border border-slate-200 bg-white px-4 py-2 font-medium text-slate-700 transition hover:bg-slate-50"
-              >
-                Cancel
-              </button>
+        {/* Create Form Container */}
+        {showCreateForm && (
+          <div className="mb-12 overflow-hidden rounded-[3rem] border border-slate-200 bg-white p-2 shadow-2xl shadow-indigo-100 animate-in zoom-in-95 duration-300">
+            <div className="rounded-[2.8rem] bg-slate-50 p-10">
+              <form onSubmit={handleCreateWorkspace} className="flex flex-col gap-8 md:flex-row md:items-end">
+                <div className="flex-1">
+                  <span className="mb-4 block text-[10px] font-black uppercase tracking-[0.3em] text-indigo-600">WORKSPACE IDENTITY</span>
+                  <input
+                    type="text"
+                    value={workspaceName}
+                    onChange={(e) => setWorkspaceName(e.target.value)}
+                    placeholder="Enter a creative name..."
+                    className="w-full bg-transparent border-b-2 border-slate-200 py-4 text-3xl font-black text-slate-950 outline-none transition placeholder:text-slate-300 focus:border-indigo-600"
+                    autoFocus
+                    required
+                  />
+                </div>
+                <div className="flex gap-4">
+                  <button
+                    type="submit"
+                    disabled={creating}
+                    className="rounded-full bg-indigo-600 px-10 py-5 font-black text-white transition-all hover:bg-indigo-700 hover:shadow-xl disabled:opacity-50"
+                  >
+                    {creating ? 'CREATING...' : 'LAUNCH'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateForm(false)}
+                    className="rounded-full border border-slate-200 bg-white px-8 py-5 font-black text-slate-600 hover:bg-slate-50 transition-colors"
+                  >
+                    CANCEL
+                  </button>
+                </div>
+              </form>
             </div>
-          </form>
-        ) : null}
+          </div>
+        )}
 
-        {error ? (
-          <div className="mb-6 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 shadow-sm">
+        {error && (
+          <div className="mb-10 rounded-3xl border border-rose-100 bg-rose-50 p-6 text-sm font-bold text-rose-600 flex items-center gap-3 animate-in slide-in-from-top-4">
+            <div className="h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
             {error}
           </div>
-        ) : null}
+        )}
 
+        {/* Dashboard Grid Header */}
+        <div className="mb-8 flex items-center gap-4 px-4">
+          <span className="text-[10px] font-black uppercase tracking-[0.5em] text-slate-400">YOUR WORKSPACES</span>
+          <div className="h-[1px] flex-1 bg-slate-200" />
+        </div>
+
+        {/* Grid Content */}
         {loading ? (
-          <div className="rounded-[2rem] border border-slate-200 bg-white p-8 text-slate-500 shadow-sm">Loading workspaces...</div>
+          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="h-64 rounded-[3.5rem] bg-white border border-slate-200 animate-pulse shadow-sm" />
+            ))}
+          </div>
         ) : workspaces.length === 0 ? (
-          <div className="rounded-[2rem] border border-dashed border-slate-300 bg-white p-8 text-slate-500 shadow-sm">
-            No workspaces yet. Create your first workspace to get started.
+          <div className="flex flex-col items-center justify-center rounded-[4rem] border-2 border-dashed border-slate-200 bg-white py-32 text-center transition-all">
+            <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-[2rem] bg-indigo-50 text-indigo-200">
+              <LayoutGrid size={48} />
+            </div>
+            <h3 className="text-2xl font-black text-slate-950">No workspaces yet</h3>
+            <p className="mt-4 text-slate-500 max-w-sm font-medium">Ready to start your first collaborative brainstorm?</p>
           </div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {workspaces.map((memberRow) => {
-              const workspace = memberRow.workspaces
-              if (!workspace) {
-                return null
-              }
+              const ws = memberRow.workspaces
+              if (!ws) return null
 
               return (
                 <button
-                  key={`${workspace.id}-${memberRow.role}`}
-                  onClick={() => handleWorkspaceClick(workspace.id)}
-                  className="group rounded-[2rem] border border-slate-200 bg-white p-5 text-left shadow-[0_16px_50px_rgba(15,23,42,0.06)] transition hover:-translate-y-1 hover:border-cyan-300 hover:shadow-[0_20px_60px_rgba(6,182,212,0.12)]"
+                  key={ws.id}
+                  onClick={() => handleWorkspaceClick(ws.id)}
+                  className="group relative flex flex-col overflow-hidden rounded-[3.5rem] border border-slate-200 bg-white p-10 text-left transition-all duration-500 hover:-translate-y-3 hover:border-indigo-600/30 hover:shadow-[0_40px_80px_-20px_rgba(79,70,229,0.1)] active:scale-[0.98]"
                 >
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <h3 className="text-xl font-semibold text-slate-900">{workspace.name}</h3>
-                      <p className="mt-2 text-sm text-slate-500">
-                        Created {new Date(workspace.created_at).toLocaleString()}
-                      </p>
+                  <div className="mb-10 flex items-center justify-between">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 border border-indigo-100 group-hover:bg-indigo-600 group-hover:border-indigo-600 transition-all duration-500">
+                      <Users size={20} className="text-indigo-600 group-hover:text-white transition-colors" />
                     </div>
-
-                    <span className="rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-700">
+                    <span className="rounded-full bg-slate-100 border border-slate-200 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-slate-500 group-hover:bg-indigo-50 group-hover:border-indigo-200 group-hover:text-indigo-600 transition-all">
                       {memberRow.role}
                     </span>
                   </div>
 
-                  <div className="mt-5 text-sm font-medium text-cyan-700 transition group-hover:text-cyan-600">
-                    Open workspace →
+                  <div className="flex-1">
+                    <h3 className="text-3xl font-black tracking-tight text-slate-950 group-hover:text-indigo-600 transition-all duration-500">
+                      {ws.name}
+                    </h3>
+                    <div className="mt-4 flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                      <Calendar size={12} />
+                      Opened {new Date(ws.created_at).toLocaleDateString()}
+                    </div>
+                  </div>
+
+                  <div className="mt-12 flex items-center justify-between">
+                    <div className="flex -space-x-3">
+                      {[1, 2, 3].map(i => (
+                        <div key={i} className="h-10 w-10 rounded-full border-[3px] border-white bg-slate-100" />
+                      ))}
+                    </div>
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-950 text-white transition-all duration-500 group-hover:bg-indigo-600 group-hover:scale-110 shadow-xl">
+                      <ArrowRight size={20} strokeWidth={3} />
+                    </div>
                   </div>
                 </button>
               )

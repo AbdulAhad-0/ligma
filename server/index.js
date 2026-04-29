@@ -26,6 +26,9 @@ const io = new Server(server, {
 
 const yjsWss = new WebSocketServer({ noServer: true })
 
+// Manual presence tracker
+const activeUsers = {} // { workspaceId: { socketId: userId } }
+
 server.on('upgrade', (req, socket, head) => {
   const pathname = new URL(req.url, 'http://localhost').pathname
 
@@ -48,7 +51,21 @@ io.on('connection', (socket) => {
     socket.join(workspaceId)
     socket.data.workspaceId = workspaceId
     if (userId) socket.data.userId = userId
-    socket.to(workspaceId).emit('user-joined', { userId })
+
+    // Update manual tracker
+    if (!activeUsers[workspaceId]) activeUsers[workspaceId] = {}
+    activeUsers[workspaceId][socket.id] = userId
+
+    const broadcastUsers = () => {
+      if (activeUsers[workspaceId]) {
+        const userIds = Object.values(activeUsers[workspaceId]).filter(Boolean)
+        const uniqueIds = Array.from(new Set(userIds))
+        io.to(workspaceId).emit('room-users', { users: uniqueIds })
+        console.log(`[Presence] Workspace ${workspaceId}:`, uniqueIds)
+      }
+    }
+    
+    broadcastUsers()
     console.log(`${socket.id} joined workspace ${workspaceId}`)
   })
 
@@ -66,10 +83,17 @@ io.on('connection', (socket) => {
   })
 
   socket.on('disconnect', () => {
-    const userId = socket.data.userId
     const workspaceId = socket.data.workspaceId
-    if (workspaceId) {
-      socket.to(workspaceId).emit('user-left', { userId })
+    if (workspaceId && activeUsers[workspaceId]) {
+      delete activeUsers[workspaceId][socket.id]
+      
+      // Clean up empty workspace entry
+      if (Object.keys(activeUsers[workspaceId]).length === 0) {
+        delete activeUsers[workspaceId]
+      } else {
+        const userIds = Object.values(activeUsers[workspaceId]).filter(Boolean)
+        io.to(workspaceId).emit('room-users', { users: Array.from(new Set(userIds)) })
+      }
     }
     console.log('socket disconnected:', socket.id)
   })
