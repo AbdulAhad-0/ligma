@@ -5,6 +5,7 @@ const { Server } = require('socket.io')
 const { WebSocketServer } = require('ws')
 const { setupWSConnection } = require('y-websocket/bin/utils')
 const cors = require('cors')
+const path = require('path')
 const ai = require('./ai')
 const rbac = require('./rbac')
 const { createClient } = require('@supabase/supabase-js')
@@ -15,6 +16,9 @@ const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173'
 const app = express()
 app.use(express.json())
 app.use(cors({ origin: FRONTEND_URL }))
+
+// Serve static files from the Vite build
+app.use(express.static(path.join(__dirname, '../dist')))
 
 // Supabase server client (optional)
 const supabase = createClient(process.env.SUPABASE_URL || '', process.env.SUPABASE_SERVICE_ROLE_KEY || '')
@@ -302,6 +306,11 @@ app.post('/api/invite-member', async (req, res) => {
     console.error('[API] Invite Error:', err)
     res.status(500).json({ error: err.message })
   }
+})
+
+// Wildcard route to serve the frontend for any non-API request
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../dist/index.html'))
 })
 
 server.listen(PORT, () => {
