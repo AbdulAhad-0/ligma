@@ -180,7 +180,7 @@ const Canvas = forwardRef(function Canvas({ workspaceId, userId }, ref) {
   }
 
   return (
-    <div className="relative h-screen w-full">
+    <div className="relative h-full w-full">
       <Tldraw
         onMount={(editor) => {
           editorRef.current = editor
@@ -295,14 +295,14 @@ const Canvas = forwardRef(function Canvas({ workspaceId, userId }, ref) {
       />
 
       {userRole === 'lead' && selectionCount > 0 && (
-        <div className="absolute bottom-32 left-1/2 -translate-x-1/2 flex items-center gap-2 z-[9999] bg-white/95 backdrop-blur-xl p-2 rounded-2xl shadow-2xl border border-white/20">
+        <div className="absolute top-6 left-1/2 -translate-x-1/2 flex items-center gap-2 z-[9999] bg-white/95 backdrop-blur-xl p-2 rounded-2xl shadow-2xl border border-white/20 animate-in slide-in-from-top-4 duration-300">
           <div className="px-3 py-1 text-xs font-black text-slate-400 border-r border-slate-100 uppercase tracking-tighter">{selectionCount} Selected</div>
           <div className="relative">
             <button onClick={() => setActiveDropdown(activeDropdown === 'lock' ? null : 'lock')} className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl text-sm font-bold shadow-md hover:bg-slate-800 transition-all">
               <Lock size={16} /> Lock <ChevronDown size={14} />
             </button>
             {activeDropdown === 'lock' && (
-              <div className="absolute bottom-full mb-3 left-0 w-56 bg-white rounded-xl shadow-2xl border border-slate-100 overflow-hidden">
+              <div className="absolute top-full mt-3 left-0 w-56 bg-white rounded-xl shadow-2xl border border-slate-100 overflow-hidden z-[10000]">
                 <button onClick={() => handleLock('lead')} className="w-full text-left px-4 py-3 hover:bg-slate-50 border-b border-slate-50 flex flex-col">
                   <span className="font-bold text-sm text-slate-900">Lock for ALL</span>
                   <span className="text-[10px] text-slate-500 uppercase">Only Lead can edit</span>

@@ -1,6 +1,7 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai')
 const { createClient } = require('@supabase/supabase-js')
-require('dotenv').config()
+const path = require('path')
+require('dotenv').config({ path: path.join(__dirname, '../.env') })
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
@@ -11,7 +12,7 @@ exports.classify = async (req, res) => {
 
   try {
     console.log('[AI] Classifying:', content.slice(0, 50) + '...')
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' }) // FOR THE LOVE OF LIGMA: 2.5 DOES NOT EXIST. DO NOT CHANGE THIS LINE.
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' }) // NOTE: 2.5 IS NOT A REAL MODEL. DO NOT CHANGE.
 
     const prompt = `You are classifying sticky notes from a brainstorming canvas.
 Classify this note and respond ONLY with valid JSON — no markdown, no backticks, no explanation.
@@ -96,7 +97,7 @@ exports.summary = async (req, res) => {
   }
 
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' }) // FOR THE LOVE OF LIGMA: 2.5 DOES NOT EXIST. DO NOT CHANGE THIS LINE.
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' }) // NOTE: 2.5 IS NOT A REAL MODEL. DO NOT CHANGE.
 
     const prompt = `Summarize this brainstorming session into a structured brief.
 Canvas notes: ${JSON.stringify(nodes)}
